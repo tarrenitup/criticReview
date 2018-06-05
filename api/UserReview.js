@@ -19,7 +19,7 @@ const reviewSchema = {
  * specified user has already reviewed the specified business or false
  * otherwise.
  */
-function hasUserReviewedBusiness(userName, gameid, mysqlPool) {
+function hasUserReviewedGame(userName, gameid, mysqlPool) {
   return new Promise((resolve, reject) => {
     mysqlPool.query(
       'SELECT COUNT(*) AS count FROM UserReview WHERE username = ? AND gameID = ?',
@@ -67,9 +67,9 @@ router.post('/', function (req, res, next) {
      * Make sure the user is not trying to review the same business twice.
      * If they're not, then insert their review into the DB.
      */
-    hasUserReviewedBusiness(req.body.username, req.body.gameID, mysqlPool)
-      .then((userReviewedThisBusinessAlready) => {
-        if (userReviewedThisBusinessAlready) {
+    hasUserReviewedGame(req.body.username, req.body.gameID, mysqlPool)
+      .then((userReviewedThisGameAlready) => {
+        if (userReviewedThisGameAlready) {
           return Promise.reject(403);
         } else {
           return insertNewReview(review, mysqlPool);
@@ -80,14 +80,14 @@ router.post('/', function (req, res, next) {
           id: id,
           links: {
             review: `/UserReview/${id}`,
-            business: `/games/${req.body.gameID}`
+            game: `/games/${req.body.gameID}`
           }
         });
       })
       .catch((err) => {
         if (err === 403) {
           res.status(403).json({
-            error: "User has already posted a review of this business"
+            error: "User has already posted a review of this game"
           });
         } else {
           res.status(500).json({
@@ -188,7 +188,7 @@ router.put('/:reviewID', function (req, res, next) {
         if (updateSuccessful) {
           res.status(200).json({
             links: {
-              business: `/games/${updatedReview.gameID}`,
+              game: `/games/${updatedReview.gameID}`,
               review: `/UserReview/${reviewID}`
             }
           });
@@ -260,7 +260,7 @@ router.delete('/:reviewID', function (req, res, next) {
  * specified business does not have any reviews.  This function does not verify
  * that the specified business ID corresponds to a valid business.
  */
-function getReviewsByBusinessID(gameid, mysqlPool) {
+function getReviewsByGameID(gameid, mysqlPool) {
   return new Promise((resolve, reject) => {
     mysqlPool.query(
       'SELECT * FROM UserReview WHERE gameID = ?',
@@ -300,5 +300,5 @@ function getReviewsByUserID(userName, mysqlPool) {
 }
 
 exports.router = router;
-exports.getReviewsByBusinessID = getReviewsByBusinessID;
+exports.getReviewsByGameID = getReviewsByGameID;
 exports.getReviewsByUserID = getReviewsByUserID;
