@@ -310,43 +310,6 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Users`
---
-
-DROP TABLE IF EXISTS `Users`;
-CREATE TABLE `Users` (
-  `username` varchar(10) NOT NULL,
-  `password` varchar(256) NOT NULL,
-  `firstName` varchar(20) NOT NULL,
-  `lastName` varchar(20) NOT NULL,
-  `age` int(11) NOT NULL,
-  `bio` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `Users`
---
-
-INSERT INTO `Users` (`username`, `password`, `firstName`, `lastName`, `age`, `bio`) VALUES
-('', '$2y$10$LZR3dm/vQDUHgF1vIVz1geF.oaUANJxTZw9eLC/Fr.NvZXk5Ukf2K', '', '', 0, ''),
-('barryj', 'testpassword', 'James', 'Barry', 20, 'LOLOLOLOLOLOLOL'),
-('bob2', '$2y$10$1ajSu3Lz4SNTmIRQeNfPWumR53tuiF/6QYEgYiYhTlBpTppcVcZqa', 'Bob', 'Two', 2, 'I\'m bob.'),
-('bobbyHill', '$2y$10$GXU0jBrkyZyqnFzcqrg1euo2Y/f9FvYZE1.91t21md8Y54CSmAoWu', 'trial1', 'Trial1', 12, 'propane'),
-('cesi', '$2y$10$tRMi/Ee0e84tTv5PhFbZWeyulmeYvHaDQ1CkJVYh7S3yvhFZO7ava', 'cesi', 'cesi', 21, 'jkhdwehfpiwnr8vy3 a'),
-('fernanen', 'testPassword3', 'Enrique', 'Fernandez', 22, ''),
-('heyguys', '$2y$10$Knkq2YHtvXzI7TcRSC5OYe6rj5FpWLV6ihbMJ.SIx4He4lM4zLmh6', 'Jams', 'Barry', 20, 'heyguys'),
-('insertUser', 'insertPass', 'insertFname', 'insertLname', 1, 'updatedBio'),
-('james', '$2y$10$E/FTe9dzYclEiAR0w2lAcOx3M9G2z/kiaEb1UdcLZymjewl109b96', 'James', 'Barry', 20, 'I\'m James'),
-('luoja', 'testpassword2', 'James', 'Luo', 20, 'lol'),
-('Mario', '$2y$10$.Tz2AQP70mF/8ydr8WhhlOmF/c4S.Oes7X/CQqRlm3ahJBsoT52uC', 'Mario', 'Plumber', 95, 'asdasd'),
-('oof', '$2y$10$WSJym8DjOsJ52j1R9oSIVuh39urmDG3GTHnqzFy/dLIOfXghdYbZa', 'James', 'Barry', 25, 'Hello world!'),
-('shiek', 'imActuallyZelda', 'Zelda', 'N/A', 7, ''),
-('test', 'testPass', 'Legendary', 'Tester', 1, ''),
-('testacc', '$2y$10$SfA1l1be8I4VHXQamsClc.XAmCpay1ph1Gs7ZWdMGhNxV0V9C/7j2', 'Test', 'Acc', 20, 'Just testing!'),
-('timp', 'testpassword5', 'Tim', 'Pip', 420, ''),
-('tom1', '$2y$10$LevoPL8PDt1R2gHA2LpS0O3DCH.ibrJTXwguioat29oA2ysPZ/7BW', 'tom', 'tim', 12, 'fgfg');
-
---
 -- Indexes for dumped tables
 --
 
@@ -385,12 +348,6 @@ ALTER TABLE `UserReview`
   ADD KEY `gameID` (`gameID`);
 
 --
--- Indexes for table `Users`
---
-ALTER TABLE `Users`
-  ADD PRIMARY KEY (`username`);
-
---
 -- Constraints for dumped tables
 --
 
@@ -416,7 +373,6 @@ ALTER TABLE `Genre`
 -- Constraints for table `UserReview`
 --
 ALTER TABLE `UserReview`
-  ADD CONSTRAINT `UserReview_ibfk_1` FOREIGN KEY (`username`) REFERENCES `Users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `UserReview_ibfk_2` FOREIGN KEY (`gameID`) REFERENCES `Games` (`gameID`) ON DELETE CASCADE;
 COMMIT;
 
