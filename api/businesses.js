@@ -144,7 +144,7 @@ router.post('/', function (req, res, next) {
       })
       .catch((err) => {
         res.status(500).json({
-          error: "Error inserting business into DB.  Please try again later."
+          error: err
         });
       });
   } else {
