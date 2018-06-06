@@ -2,7 +2,8 @@ const router = require('express').Router();
 const validation = require('../lib/validation');
 
 
-const reviewSchema = {
+const criticReviewSchema = {
+    reviewID: { required: true },
     url: { required: true },
     gameID: { required: true },
     websiteName: { required: true },
@@ -20,10 +21,10 @@ const reviewSchema = {
  */
 function insertNewCriticReview(review, mysqlPool) {
   return new Promise((resolve, reject) => {
-    review = validation.extractValidFields(review, reviewSchema);
+    review = validation.extractValidFields(review, criticReviewSchema);
     review.id = null;
     mysqlPool.query(
-      'INSERT INTO CriticReview SET ?',
+      'INSERT INTO reviews SET ?',
       review,
       function (err, result) {
         if (err) {
@@ -41,14 +42,14 @@ function insertNewCriticReview(review, mysqlPool) {
  */
 router.post('/', function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
-  if (validation.validateAgainstSchema(req.body, reviewSchema)) {
+  if (validation.validateAgainstSchema(req.body, criticReviewSchema)) {
       insertNewCriticReview(review, mysqlPool)
       .then((id) => {
         res.status(201).json({
           id: id,
           links: {
             review: `/criticReview/${id}`,
-            game: `/games/${req.body.businessid}`
+            game: `/games/${req.body.gameID}`
           }
         });
       })
@@ -70,10 +71,10 @@ router.post('/', function (req, res, next) {
   }
 });
 
-// /*
-//  * Executes a MySQL query to fetch a single specified review based on its ID.
-//  * Returns a Promise that resolves to an object containing the requested
-//  * review.  If no review with the specified ID exists, the returned Promise
+/*
+ * Executes a MySQL query to fetch a single specified review based on its ID.
+ * Returns a Promise that resolves to an object containing the requested
+ * review.  If no review with the specified ID exists, the returned Promise
 //  * will resolve to null.
 //  */
 // function getReviewByID(reviewID, mysqlPool) {
@@ -116,7 +117,7 @@ router.post('/', function (req, res, next) {
 //  */
 // function replaceReviewByID(reviewID, review, mysqlPool) {
 //   return new Promise((resolve, reject) => {
-//     review = validation.extractValidFields(review, reviewSchema);
+//     review = validation.extractValidFields(review, criticReviewSchema);
 //     mysqlPool.query('UPDATE reviews SET ? WHERE id = ?', [ review, reviewID ], function (err, result) {
 //       if (err) {
 //         reject(err);
@@ -133,8 +134,8 @@ router.post('/', function (req, res, next) {
 // router.put('/:reviewID', function (req, res, next) {
 //   const mysqlPool = req.app.locals.mysqlPool;
 //   const reviewID = parseInt(req.params.reviewID);
-//   if (validation.validateAgainstSchema(req.body, reviewSchema)) {
-//     let updatedReview = validation.extractValidFields(req.body, reviewSchema);
+//   if (validation.validateAgainstSchema(req.body, criticReviewSchema)) {
+//     let updatedReview = validation.extractValidFields(req.body, criticReviewSchema);
 //     /*
 //      * Make sure the updated review has the same businessID and userID as
 //      * the existing review.  If it doesn't, respond with a 403 error.  If the
@@ -267,6 +268,6 @@ router.post('/', function (req, res, next) {
 //   });
 // }
 
-exports.router = router;
-exports.getReviewsByBusinessID = getReviewsByBusinessID;
-exports.getReviewsByUserID = getReviewsByUserID;
+// exports.router = router;
+// exports.getReviewsByBusinessID = getReviewsByBusinessID;
+// exports.getReviewsByUserID = getReviewsByUserID;
