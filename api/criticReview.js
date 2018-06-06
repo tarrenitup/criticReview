@@ -16,15 +16,15 @@ const criticReviewSchema = {
 
 
 /*
- * Executes a MySQL query to insert a new review into the database.  Returns
- * a Promise that resolves to the ID of the newly-created review entry.
+ * Executes a MySQL query to insert a new critic review into the database.  Returns
+ * a Promise that resolves to the ID of the newly-created critic review entry.
  */
 function insertNewCriticReview(review, mysqlPool) {
   return new Promise((resolve, reject) => {
     review = validation.extractValidFields(review, criticReviewSchema);
     review.id = null;
     mysqlPool.query(
-      'INSERT INTO reviews SET ?',
+      'INSERT INTO CriticReview SET ?',
       review,
       function (err, result) {
         if (err) {
@@ -38,7 +38,7 @@ function insertNewCriticReview(review, mysqlPool) {
 }
 
 /*
- * Route to create a new review.
+ * Route to create a new critic review.
  */
 router.post('/', function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
@@ -54,13 +54,119 @@ router.post('/', function (req, res, next) {
         });
       })
       .catch((err) => {
+        res.status(500).json({
+        error: "Error inserting critic review into DB."
+        });
+      });
+  } else {
+    res.status(400).json({
+      error: "Request body is not a valid critic review object."
+    });
+  }
+});
+
+/*
+ * Executes a MySQL query to fetch a single specified critic review based on its ID.
+ * Returns a Promise that resolves to an object containing the requested critic
+ * review.  If no critic review with the specified ID exists, the returned Promise
+ * will resolve to null.
+ */
+function getCriticReviewByID(reviewID, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    mysqlPool.query('SELECT * FROM CriticReview WHERE id = ?', [ reviewID ], function (err, results) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results[0]);
+      }
+    });
+  });
+}
+
+/*
+ * Route to fetch info about a specific review.
+ */
+router.get('/:reviewID', function (req, res, next) {
+  const mysqlPool = req.app.locals.mysqlPool;
+  const reviewID = parseInt(req.params.reviewID);
+  getCriticReviewByID(reviewID, mysqlPool)
+    .then((review) => {
+      if (review) {
+        res.status(200).json(review);
+      } else {
+        next();
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: "Unable to fetch critic review."
+      });
+    });
+});
+
+/*
+ * Executes a MySQL query to replace a specified critic review with new data.
+ * Returns a Promise that resolves to true if the critic review specified by
+ * `reviewID` existed and was successfully updated or to false otherwise.
+ */
+function replaceCriticReviewByID(reviewID, review, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    review = validation.extractValidFields(review, criticReviewSchema);
+    mysqlPool.query('UPDATE CriticReview SET ? WHERE id = ?', [ review, reviewID ], function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result.affectedRows > 0);
+      }
+    });
+  });
+}
+
+/*
+ * Route to update a review.
+ */
+router.put('/:reviewID', function (req, res, next) {
+  const mysqlPool = req.app.locals.mysqlPool;
+  const reviewID = parseInt(req.params.reviewID);
+  if (validation.validateAgainstSchema(req.body, criticReviewSchema)) {
+    let updatedReview = validation.extractValidFields(req.body, criticReviewSchema);
+    /*
+     * Make sure the updated critic review has the same gameID as
+     * the existing review.  If it doesn't, respond with a 403 error.  If the
+     * review doesn't already exist, respond with a 404 error.
+     */
+    getCriticReviewByID(reviewID, mysqlPool)
+      .then((existingReview) => {
+        if (existingReview) {
+          if (updatedReview.gameID === existingReview.gameID) {
+            return replaceCriticReviewByID(reviewID, updatedReview, mysqlPool);
+          } else {
+            return Promise.reject(403);
+          }
+        } else {
+          next();
+        }
+      })
+      .then((updateSuccessful) => {
+        if (updateSuccessful) {
+          res.status(200).json({
+            links: {
+              business: `/games/${updatedReview.gameID}`,
+              review: `/criticReview/${reviewID}`
+            }
+          });
+        } else {
+          next();
+        }
+      })
+      .catch((err) => {
         if (err === 403) {
           res.status(403).json({
-            error: "User has already posted a review of this business"
+            error: "Updated review must have the same gameID"
           });
         } else {
           res.status(500).json({
-            error: "Error inserting review into DB.  Please try again later."
+            error: "Unable to update review."
           });
         }
       });
@@ -72,186 +178,74 @@ router.post('/', function (req, res, next) {
 });
 
 /*
- * Executes a MySQL query to fetch a single specified review based on its ID.
- * Returns a Promise that resolves to an object containing the requested
- * review.  If no review with the specified ID exists, the returned Promise
-//  * will resolve to null.
-//  */
-// function getReviewByID(reviewID, mysqlPool) {
-//   return new Promise((resolve, reject) => {
-//     mysqlPool.query('SELECT * FROM reviews WHERE id = ?', [ reviewID ], function (err, results) {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(results[0]);
-//       }
-//     });
-//   });
-// }
+ * Executes a MySQL query to delete a critic review specified by its ID.  Returns
+ * a Promise that resolves to true if the critic review specified by `reviewID`
+ * existed and was successfully deleted or to false otherwise.
+ */
+function deleteReviewByID(reviewID, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    mysqlPool.query('DELETE FROM CriticReview WHERE id = ?', [ reviewID ], function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result.affectedRows > 0);
+      }
+    });
+  });
 
-// /*
-//  * Route to fetch info about a specific review.
-//  */
-// router.get('/:reviewID', function (req, res, next) {
-//   const mysqlPool = req.app.locals.mysqlPool;
-//   const reviewID = parseInt(req.params.reviewID);
-//   getReviewByID(reviewID, mysqlPool)
-//     .then((review) => {
-//       if (review) {
-//         res.status(200).json(review);
-//       } else {
-//         next();
-//       }
-//     })
-//     .catch((err) => {
-//       res.status(500).json({
-//         error: "Unable to fetch review.  Please try again later."
-//       });
-//     });
-// });
+}
 
-// /*
-//  * Executes a MySQL query to replace a specified review with new data.
-//  * Returns a Promise that resolves to true if the review specified by
-//  * `reviewID` existed and was successfully updated or to false otherwise.
-//  */
-// function replaceReviewByID(reviewID, review, mysqlPool) {
-//   return new Promise((resolve, reject) => {
-//     review = validation.extractValidFields(review, criticReviewSchema);
-//     mysqlPool.query('UPDATE reviews SET ? WHERE id = ?', [ review, reviewID ], function (err, result) {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(result.affectedRows > 0);
-//       }
-//     });
-//   });
-// }
+/*
+ * Route to delete a review.
+ */
+router.delete('/:reviewID', function (req, res, next) {
+  const mysqlPool = req.app.locals.mysqlPool;
+  const reviewID = parseInt(req.params.reviewID);
+  deleteReviewByID(reviewID, mysqlPool)
+    .then((deleteSuccessful) => {
+      if (deleteSuccessful) {
+        res.status(204).end();
+      } else {
+        next();
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: "Unable to delete review.  Please try again later."
+      });
+    });
+});
 
-// /*
-//  * Route to update a review.
-//  */
-// router.put('/:reviewID', function (req, res, next) {
-//   const mysqlPool = req.app.locals.mysqlPool;
-//   const reviewID = parseInt(req.params.reviewID);
-//   if (validation.validateAgainstSchema(req.body, criticReviewSchema)) {
-//     let updatedReview = validation.extractValidFields(req.body, criticReviewSchema);
-//     /*
-//      * Make sure the updated review has the same businessID and userID as
-//      * the existing review.  If it doesn't, respond with a 403 error.  If the
-//      * review doesn't already exist, respond with a 404 error.
-//      */
-//     getReviewByID(reviewID, mysqlPool)
-//       .then((existingReview) => {
-//         if (existingReview) {
-//           if (updatedReview.businessid === existingReview.businessid && updatedReview.userid === existingReview.userid) {
-//             return replaceReviewByID(reviewID, updatedReview, mysqlPool);
-//           } else {
-//             return Promise.reject(403);
-//           }
-//         } else {
-//           next();
-//         }
-//       })
-//       .then((updateSuccessful) => {
-//         if (updateSuccessful) {
-//           res.status(200).json({
-//             links: {
-//               business: `/businesses/${updatedReview.businessid}`,
-//               review: `/reviews/${reviewID}`
-//             }
-//           });
-//         } else {
-//           next();
-//         }
-//       })
-//       .catch((err) => {
-//         if (err === 403) {
-//           res.status(403).json({
-//             error: "Updated review must have the same businessID and userID"
-//           });
-//         } else {
-//           res.status(500).json({
-//             error: "Unable to update review.  Please try again later."
-//           });
-//         }
-//       });
-//   } else {
-//     res.status(400).json({
-//       error: "Request body is not a valid review object."
-//     });
-//   }
-// });
+/*
+ * Executes a MySQL query to fetch all reviews for a game, based
+ * on the game's ID. Returns a Promise that resolves to an array
+ * containing the requested critic reviews. This array could be empty if the
+ * specified game does not have any critic reviews.  This function does not verify
+ * that the specified game ID corresponds to a valid game.
+ */
+function getReviewsByBusinessID(gameID, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    mysqlPool.query(
+      'SELECT * FROM CriticReview WHERE gameID = ?',
+      [ gameID ],
+      function (err, results) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+}
 
-// /*
-//  * Executes a MySQL query to delete a review specified by its ID.  Returns
-//  * a Promise that resolves to true if the review specified by `reviewID`
-//  * existed and was successfully deleted or to false otherwise.
-//  */
-// function deleteReviewByID(reviewID, mysqlPool) {
-//   return new Promise((resolve, reject) => {
-//     mysqlPool.query('DELETE FROM reviews WHERE id = ?', [ reviewID ], function (err, result) {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(result.affectedRows > 0);
-//       }
-//     });
-//   });
-
-// }
-
-// /*
-//  * Route to delete a review.
-//  */
-// router.delete('/:reviewID', function (req, res, next) {
-//   const mysqlPool = req.app.locals.mysqlPool;
-//   const reviewID = parseInt(req.params.reviewID);
-//   deleteReviewByID(reviewID, mysqlPool)
-//     .then((deleteSuccessful) => {
-//       if (deleteSuccessful) {
-//         res.status(204).end();
-//       } else {
-//         next();
-//       }
-//     })
-//     .catch((err) => {
-//       res.status(500).json({
-//         error: "Unable to delete review.  Please try again later."
-//       });
-//     });
-// });
-
-// /*
-//  * Executes a MySQL query to fetch all reviews for a specified business, based
-//  * on the business's ID.  Returns a Promise that resolves to an array
-//  * containing the requested reviews.  This array could be empty if the
-//  * specified business does not have any reviews.  This function does not verify
-//  * that the specified business ID corresponds to a valid business.
-//  */
-// function getReviewsByBusinessID(businessID, mysqlPool) {
-//   return new Promise((resolve, reject) => {
-//     mysqlPool.query(
-//       'SELECT * FROM reviews WHERE businessid = ?',
-//       [ businessID ],
-//       function (err, results) {
-//         if (err) {
-//           reject(err);
-//         } else {
-//           resolve(results);
-//         }
-//       }
-//     );
-//   });
-// }
-
-// /*
-//  * Executes a MySQL query to fetch all reviews by a specified user, based on
-//  * on the user's ID.  Returns a Promise that resolves to an array containing
-//  * the requested reviews.  This array could be empty if the specified user
-//  * does not have any reviews.  This function does not verify that the specified
-//  * user ID corresponds to a valid user.
-//  */
+/*
+ * Executes a MySQL query to fetch all reviews by a specified user, based on
+ * on the user's ID.  Returns a Promise that resolves to an array containing
+ * the requested reviews.  This array could be empty if the specified user
+ * does not have any reviews.  This function does not verify that the specified
+ * user ID corresponds to a valid user.
+ */
 // function getReviewsByUserID(userID, mysqlPool) {
 //   return new Promise((resolve, reject) => {
 //     mysqlPool.query(
@@ -268,6 +262,6 @@ router.post('/', function (req, res, next) {
 //   });
 // }
 
-// exports.router = router;
-// exports.getReviewsByBusinessID = getReviewsByBusinessID;
+exports.router = router;
+exports.getReviewsByBusinessID = getReviewsByBusinessID;
 // exports.getReviewsByUserID = getReviewsByUserID;
