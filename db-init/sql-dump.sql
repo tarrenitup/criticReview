@@ -81,7 +81,8 @@ CREATE TABLE `CriticReview` (
   `authorName` varchar(20) NOT NULL,
   `score` int(11) NOT NULL,
   `reviewContent` text NOT NULL,
-  `datePosted` date NOT NULL
+  `datePosted` date NOT NULL,
+  PRIMARY KEY (`reviewID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 --
@@ -155,14 +156,14 @@ CREATE TABLE `Games` (
   `esrb` varchar(5) NOT NULL,
   `description` text NOT NULL,
   `overallCriticScore` int(3) NOT NULL,
-  `overallUserScore` int(3) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=`;
+  `overallUserScore` int(3) NOT NULL,
+  PRIMARY KEY (`gameID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 --
 -- Dumping data for table `Games`
 --
 
-DROP TABLE IF EXISTS `Games`;
 INSERT INTO `Games` (`gameID`, `gameName`, `esrb`, `description`, `overallCriticScore`, `overallUserScore`) VALUES
 (1, 'The Legend of Zelda: Ocarina of Time', 'E', 'As a young boy, Link is tricked by Ganondorf, the King of the Gerudo Thieves. The evil human uses Link to gain access to the Sacred Realm, where he places his tainted hands on Triforce and transforms the beautiful Hyrulean landscape into a barren wasteland. Link is determined to fix the problems he helped to create, so with the help of Rauru he travels through time gathering the powers of the Seven Sages. [Nintendo]', 99, 52),
 (2, 'Guild Wars 2', 'T', 'Guild Wars 2 draws from the game mechanics that made the original Guild Wars one of the most popular online games and adds a fully persistent world. Like its predecessors, Guild Wars 2 does not have a subscription fee. Guild Wars Eye of the North provides a Hall of Monuments where players\' accomplishments are memorialized and eventually inherited by their Guild Wars 2 characters, unlocking exclusive items and bonuses in Guild Wars 2. [NCSoft]', 94, 58),
@@ -228,7 +229,8 @@ CREATE TABLE `UserReview` (
   `gameID` int(11) NOT NULL,
   `reviewContent` text NOT NULL,
   `score` int(11) NOT NULL,
-  `datePosted` date NOT NULL
+  `datePosted` date NOT NULL,
+  PRIMARY KEY (`reviewID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 --
@@ -322,29 +324,11 @@ ALTER TABLE `Consoles`
   ADD KEY `Game ID` (`gameID`);
 
 --
--- Indexes for table `CriticReview`
---
-ALTER TABLE `CriticReview`
-  ADD PRIMARY KEY (`reviewID`);
-
---
--- Indexes for table `Games`
---
-ALTER TABLE `Games`
-  ADD PRIMARY KEY (`gameID`);
-
---
 -- Indexes for table `Genre`
 --
 ALTER TABLE `Genre`
   ADD PRIMARY KEY (`genre`,`gameID`),
   ADD KEY `gameID` (`gameID`);
-
---
--- Indexes for table `UserReview`
---
-ALTER TABLE `UserReview`
-  ADD PRIMARY KEY (`reviewID`);
 
 --
 -- Constraints for dumped tables

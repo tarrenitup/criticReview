@@ -223,7 +223,7 @@ router.delete('/:reviewID', function (req, res, next) {
  * specified game does not have any critic reviews.  This function does not verify
  * that the specified game ID corresponds to a valid game.
  */
-function getReviewsByBusinessID(gameID, mysqlPool) {
+function getReviewsByGameID(gameID, mysqlPool) {
   return new Promise((resolve, reject) => {
     mysqlPool.query(
       'SELECT * FROM CriticReview WHERE gameID = ?',
@@ -240,28 +240,28 @@ function getReviewsByBusinessID(gameID, mysqlPool) {
 }
 
 /*
- * Executes a MySQL query to fetch all reviews by a specified user, based on
- * on the user's ID.  Returns a Promise that resolves to an array containing
- * the requested reviews.  This array could be empty if the specified user
- * does not have any reviews.  This function does not verify that the specified
- * user ID corresponds to a valid user.
+ * Executes a MySQL query to fetch all critic reviews by a specified critic, based on
+ * on the author name. Returns a Promise that resolves to an array containing
+ * the requested reviews. This array could be empty if the specified author
+ * does not have any reviews. This function does not verify that the specified
+ * authorName corresponds to a valid critic.
  */
-// function getReviewsByUserID(userID, mysqlPool) {
-//   return new Promise((resolve, reject) => {
-//     mysqlPool.query(
-//       'SELECT * FROM reviews WHERE userid = ?',
-//       [ userID ],
-//       function (err, results) {
-//         if (err) {
-//           reject(err);
-//         } else {
-//           resolve(results);
-//         }
-//       }
-//     );
-//   });
-// }
+function getReviewsByCritic(authorName, mysqlPool) {
+  return new Promise((resolve, reject) => {
+    mysqlPool.query(
+      'SELECT * FROM CriticReview WHERE authorName = ?',
+      [ authorName ],
+      function (err, results) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+}
 
 exports.router = router;
-exports.getReviewsByBusinessID = getReviewsByBusinessID;
-// exports.getReviewsByUserID = getReviewsByUserID;
+exports.getReviewsByGameID = getReviewsByGameID;
+exports.getReviewsByCritic = getReviewsByCritic;
