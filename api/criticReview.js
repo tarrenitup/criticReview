@@ -268,6 +268,6 @@ router.post('/', function (req, res, next) {
 //   });
 // }
 
-// exports.router = router;
+exports.router = router;
 // exports.getReviewsByBusinessID = getReviewsByBusinessID;
 // exports.getReviewsByUserID = getReviewsByUserID;

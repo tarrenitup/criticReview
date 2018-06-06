@@ -60,7 +60,7 @@ MongoClient.connect(mongoURL, function (err, client) {
   if (!err) {
     app.locals.mongoDB = client.db(mongoDBName);
     app.listen(port, function() {
-      console.log("== Server is running on port", port);
+      console.log("== Server is running on port", port, "\n");
     });
   }
   else console.log(err);

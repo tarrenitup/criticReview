@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const validation = require('../lib/validation');
-const { getReviewsByGameID } = require('./UserReview');
+//const { getReviewsByGameID } = require('./UserReview');
 
 /*
  * Schema describing required/optional fields of a game object.
@@ -47,7 +47,7 @@ function getGamesPage(page, totalCount, mysqlPool) {
     const offset = (page - 1) * numPerPage;
 
     mysqlPool.query(
-      'SELECT * FROM Games ORDER BY id LIMIT ?,?',
+      'SELECT * FROM Games ORDER BY gameID LIMIT ?,?',
       [ offset, numPerPage ],
       function (err, results) {
         if (err) {
