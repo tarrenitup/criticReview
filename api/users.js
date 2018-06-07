@@ -18,8 +18,7 @@ function insertNewUser(user, mongoDB) {
         userID: user.userID,
         name: user.name,
         email: user.email,
-        password: passwordHash,
-        lodgings: []
+        password: passwordHash
       };
       const usersCollection = mongoDB.collection('users');
       return usersCollection.insertOne(userDocument);
