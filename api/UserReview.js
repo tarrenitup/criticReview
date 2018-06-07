@@ -1,5 +1,7 @@
 const router = require('express').Router();
 const validation = require('../lib/validation');
+const { generateAuthToken, requireAuthentication } = require('../lib/auth');
+
 
 /*
  * Schema describing required/optional fields of a review object.
@@ -60,45 +62,52 @@ function insertNewReview(review, mysqlPool) {
 /*
  * Route to create a new review.
  */
-router.post('/', function (req, res, next) {
+router.post('/',requireAuthentication,  function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
-  if (validation.validateAgainstSchema(req.body, reviewSchema)) {
-    /*
-     * Make sure the user is not trying to review the same business twice.
-     * If they're not, then insert their review into the DB.
-     */
-    hasUserReviewedGame(req.body.username, req.body.gameID, mysqlPool)
-      .then((userReviewedThisGameAlready) => {
-        if (userReviewedThisGameAlready) {
-          return Promise.reject(403);
-        } else {
-          return insertNewReview(review, mysqlPool);
-        }
-      })
-      .then((id) => {
-        res.status(201).json({
-          id: id,
-          links: {
-            review: `/UserReview/${id}`,
-            game: `/games/${req.body.gameID}`
+  if (req.user !== req.body.username) {
+    res.status(403).json({
+      error: "Unauthorized to access that resource"
+    });
+  }
+  else{
+    if (validation.validateAgainstSchema(req.body, reviewSchema)) {
+      /*
+       * Make sure the user is not trying to review the same business twice.
+       * If they're not, then insert their review into the DB.
+       */
+      hasUserReviewedGame(req.body.username, req.body.gameID, mysqlPool)
+        .then((userReviewedThisGameAlready) => {
+          if (userReviewedThisGameAlready) {
+            return Promise.reject(403);
+          } else {
+            return insertNewReview(review, mysqlPool);
+          }
+        })
+        .then((id) => {
+          res.status(201).json({
+            id: id,
+            links: {
+              review: `/UserReview/${id}`,
+              game: `/games/${req.body.gameID}`
+            }
+          });
+        })
+        .catch((err) => {
+          if (err === 403) {
+            res.status(403).json({
+              error: "User has already posted a review of this game"
+            });
+          } else {
+            res.status(500).json({
+              error: "Error inserting review into DB.  Please try again later."
+            });
           }
         });
-      })
-      .catch((err) => {
-        if (err === 403) {
-          res.status(403).json({
-            error: "User has already posted a review of this game"
-          });
-        } else {
-          res.status(500).json({
-            error: "Error inserting review into DB.  Please try again later."
-          });
-        }
+    } else {
+      res.status(400).json({
+        error: "Request body is not a valid review object."
       });
-  } else {
-    res.status(400).json({
-      error: "Request body is not a valid review object."
-    });
+    }
   }
 });
 
@@ -110,7 +119,7 @@ router.post('/', function (req, res, next) {
  */
 function getReviewByID(reviewID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('SELECT * FROM UserReview WHERE id = ?', [ reviewID ], function (err, results) {
+    mysqlPool.query('SELECT * FROM UserReview WHERE reviewID = ?', [ reviewID ], function (err, results) {
       if (err) {
         reject(err);
       } else {
@@ -149,7 +158,7 @@ router.get('/:reviewID', function (req, res, next) {
 function replaceReviewByID(reviewID, review, mysqlPool) {
   return new Promise((resolve, reject) => {
     review = validation.extractValidFields(review, reviewSchema);
-    mysqlPool.query('UPDATE UserReview SET ? WHERE id = ?', [ review, reviewID ], function (err, result) {
+    mysqlPool.query('UPDATE UserReview SET ? WHERE reviewID = ?', [ review, reviewID ], function (err, result) {
       if (err) {
         reject(err);
       } else {
@@ -162,55 +171,62 @@ function replaceReviewByID(reviewID, review, mysqlPool) {
 /*
  * Route to update a review.
  */
-router.put('/:reviewID', function (req, res, next) {
+router.put('/:reviewID',requireAuthentication,  function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
   const reviewID = parseInt(req.params.reviewID);
-  if (validation.validateAgainstSchema(req.body, reviewSchema)) {
-    let updatedReview = validation.extractValidFields(req.body, reviewSchema);
-    /*
-     * Make sure the updated review has the same businessID and username as
-     * the existing review.  If it doesn't, respond with a 403 error.  If the
-     * review doesn't already exist, respond with a 404 error.
-     */
-    getReviewByID(reviewID, mysqlPool)
-      .then((existingReview) => {
-        if (existingReview) {
-          if (updatedReview.gameID === existingReview.gameID && updatedReview.username === existingReview.username) {
-            return replaceReviewByID(reviewID, updatedReview, mysqlPool);
-          } else {
-            return Promise.reject(403);
-          }
-        } else {
-          next();
-        }
-      })
-      .then((updateSuccessful) => {
-        if (updateSuccessful) {
-          res.status(200).json({
-            links: {
-              game: `/games/${updatedReview.gameID}`,
-              review: `/UserReview/${reviewID}`
-            }
-          });
-        } else {
-          next();
-        }
-      })
-      .catch((err) => {
-        if (err === 403) {
-          res.status(403).json({
-            error: "Updated review must have the same gameID and username"
-          });
-        } else {
-          res.status(500).json({
-            error: "Unable to update review.  Please try again later."
-          });
-        }
-      });
-  } else {
-    res.status(400).json({
-      error: "Request body is not a valid review object."
+  if (req.user !== req.body.username) {
+    res.status(403).json({
+      error: "Unauthorized to access that resource"
     });
+  }
+  else{
+    if (validation.validateAgainstSchema(req.body, reviewSchema)) {
+      let updatedReview = validation.extractValidFields(req.body, reviewSchema);
+      /*
+       * Make sure the updated review has the same businessID and username as
+       * the existing review.  If it doesn't, respond with a 403 error.  If the
+       * review doesn't already exist, respond with a 404 error.
+       */
+      getReviewByID(reviewID, mysqlPool)
+        .then((existingReview) => {
+          if (existingReview) {
+            if (updatedReview.gameID === existingReview.gameID && updatedReview.username === existingReview.username) {
+              return replaceReviewByID(reviewID, updatedReview, mysqlPool);
+            } else {
+              return Promise.reject(403);
+            }
+          } else {
+            next();
+          }
+        })
+        .then((updateSuccessful) => {
+          if (updateSuccessful) {
+            res.status(200).json({
+              links: {
+                game: `/games/${updatedReview.gameID}`,
+                review: `/UserReview/${reviewID}`
+              }
+            });
+          } else {
+            next();
+          }
+        })
+        .catch((err) => {
+          if (err === 403) {
+            res.status(403).json({
+              error: "Updated review must have the same gameID and username"
+            });
+          } else {
+            res.status(500).json({
+              error: "Unable to update review.  Please try again later."
+            });
+          }
+        });
+    } else {
+      res.status(400).json({
+        error: "Request body is not a valid review object."
+      });
+    }
   }
 });
 
@@ -221,7 +237,7 @@ router.put('/:reviewID', function (req, res, next) {
  */
 function deleteReviewByID(reviewID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('DELETE FROM UserReview WHERE id = ?', [ reviewID ], function (err, result) {
+    mysqlPool.query('DELETE FROM UserReview WHERE reviewID = ?', [ reviewID ], function (err, result) {
       if (err) {
         reject(err);
       } else {
@@ -235,22 +251,29 @@ function deleteReviewByID(reviewID, mysqlPool) {
 /*
  * Route to delete a review.
  */
-router.delete('/:reviewID', function (req, res, next) {
+router.delete('/:reviewID',requireAuthentication,  function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
   const reviewID = parseInt(req.params.reviewID);
-  deleteReviewByID(reviewID, mysqlPool)
-    .then((deleteSuccessful) => {
-      if (deleteSuccessful) {
-        res.status(204).end();
-      } else {
-        next();
-      }
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: "Unable to delete review.  Please try again later."
-      });
+  if (req.user !== req.body.username) {
+    res.status(403).json({
+      error: "Unauthorized to access that resource"
     });
+  }
+  else{
+    deleteReviewByID(reviewID, mysqlPool)
+      .then((deleteSuccessful) => {
+        if (deleteSuccessful) {
+          res.status(204).end();
+        } else {
+          next();
+        }
+      })
+      .catch((err) => {
+        res.status(500).json({
+          error: "Unable to delete review.  Please try again later."
+        });
+      });
+    }
 });
 
 /*
