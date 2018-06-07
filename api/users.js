@@ -194,7 +194,7 @@ router.get('/:userID/reviews', requireAuthentication, function (req, res, next) 
     res.status(403).json({
       error: "Unauthorized to access that resource"
     });
-  } else{ 
+  } else{
       getReviewByUserID(req.params.userID, mysqlPool)
         .then((ownerReview) => {
           res.status(200).json({
