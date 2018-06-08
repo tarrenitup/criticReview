@@ -229,6 +229,7 @@ CREATE TABLE `UserReview` (
   `gameID` int(11) NOT NULL,
   `reviewContent` text NOT NULL,
   `score` int(11) NOT NULL,
+  `datePosted` date NOT NULL,
   PRIMARY KEY (`reviewID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 

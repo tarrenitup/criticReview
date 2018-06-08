@@ -36,7 +36,7 @@ router.post('/', function (req, res) {
         res.status(201).json({
           _id: id,
           links: {
-            user: `/users/${id}`
+            user: `/users/${req.body.username}`
           }
         });
       })
@@ -133,48 +133,12 @@ router.get('/:userID', requireAuthentication, function (req, res, next) {
 });
 
 /*
- * Route to list all of a user's businesses
- */
-function getBusinessByOwnerID(ownerID, mysqlPool) {
-  return new Promise((resolve, reject) => {
-    mysqlPool.query('SELECT * FROM businesses WHERE ownerid = ?', [ ownerID ], function (err, results) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results);
-      }
-    });
-  });
-}
-
-router.get('/:userID/businesses', requireAuthentication, function (req, res, next) {
-  const mysqlPool = req.app.locals.mysqlPool;
-  if (req.user !== req.params.userID) {
-    res.status(403).json({
-      error: "Unauthorized to access that resource"
-    });
-  } else{
-      getBusinessByOwnerID(req.params.userID, mysqlPool)
-        .then((ownerBusinesses) => {
-          res.status(200).json({
-            businesses: ownerBusinesses
-          });
-        })
-        .catch((err) => {
-          res.status(500).json({
-            error: `Unable to fetch businesses for user ${ownerID}`
-          });
-        });
-  }
-});
-
-/*
  * Route to list all of a user's reviews.
  */
  function getReviewByUserID(userID, mysqlPool) {
   return new Promise((resolve, reject) => {
     mysqlPool.query(
-      'SELECT * FROM reviews WHERE userid = ?',
+      'SELECT * FROM UserReview WHERE username = ?',
       [ userID ],
       function (err, results) {
         if (err) {
@@ -187,7 +151,7 @@ router.get('/:userID/businesses', requireAuthentication, function (req, res, nex
   });
 }
 
-router.get('/:userID/reviews', requireAuthentication, function (req, res, next) {
+router.get('/:userID/UserReview', requireAuthentication, function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
   if (req.user !== req.params.userID) {
     res.status(403).json({
@@ -203,46 +167,6 @@ router.get('/:userID/reviews', requireAuthentication, function (req, res, next) 
         .catch((err) => {
           res.status(500).json({
             error: `Unable to fetch reviews for user ${req.params.userID}`
-          });
-        });
-  }
-});
-
-/*
- * Route to list all of a user's photos.
- */
-function getPhotoByUserID(userID, mysqlPool) {
-  return new Promise((resolve, reject) => {
-    mysqlPool.query(
-      'SELECT * FROM photos WHERE userid = ?',
-      [ userID ],
-      function (err, results) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results);
-        }
-      }
-    );
-  });
-}
-
-router.get('/:userID/photos', requireAuthentication, function (req, res, next) {
-  const mysqlPool = req.app.locals.mysqlPool;
-  if (req.user !== req.params.userID) {
-    res.status(403).json({
-      error: "Unauthorized to access that resource"
-    });
-  } else{
-       getPhotoByUserID(req.params.userID, mysqlPool)
-        .then((ownerPhoto) => {
-          res.status(200).json({
-            review: ownerPhoto
-          });
-        })
-        .catch((err) => {
-          res.status(500).json({
-            error: `Unable to fetch photos for user ${req.params.userID}`
           });
         });
   }

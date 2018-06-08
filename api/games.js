@@ -5,8 +5,7 @@ const validation = require('../lib/validation');
 /*
  * Schema describing required/optional fields of a game object.
  */
-const gamesSchema = {
-  gameID: { required: true },
+const gameSchema = {
   gameName: { required: true },
   esrb: { required: true },
   description: { required: true },
