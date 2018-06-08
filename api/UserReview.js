@@ -44,7 +44,7 @@ function hasUserReviewedGame(userName, gameid, mysqlPool) {
 function insertNewReview(review, mysqlPool) {
   return new Promise((resolve, reject) => {
     review = validation.extractValidFields(review, reviewSchema);
-    review.id = null;
+    review.ID = null; //// yooo
     mysqlPool.query(
       'INSERT INTO UserReview SET ?',
       review,
@@ -80,7 +80,7 @@ router.post('/',requireAuthentication,  function (req, res, next) {
           if (userReviewedThisGameAlready) {
             return Promise.reject(403);
           } else {
-            return insertNewReview(review, mysqlPool);
+            return insertNewReview(req.body, mysqlPool); /// yoooo
           }
         })
         .then((id) => {

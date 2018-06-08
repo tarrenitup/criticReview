@@ -22,7 +22,7 @@ const criticReviewSchema = {
 function insertNewCriticReview(review, mysqlPool) {
   return new Promise((resolve, reject) => {
     review = validation.extractValidFields(review, criticReviewSchema);
-    review.id = null;
+    review.ID = null;
     mysqlPool.query(
       'INSERT INTO CriticReview SET ?',
       review,
@@ -43,7 +43,7 @@ function insertNewCriticReview(review, mysqlPool) {
 router.post('/', function (req, res, next) {
   const mysqlPool = req.app.locals.mysqlPool;
   if (validation.validateAgainstSchema(req.body, criticReviewSchema)) {
-      insertNewCriticReview(review, mysqlPool)
+      insertNewCriticReview(req.body, mysqlPool)
       .then((id) => {
         res.status(201).json({
           id: id,
