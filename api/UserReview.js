@@ -44,7 +44,7 @@ function hasUserReviewedGame(userName, gameid, mysqlPool) {
 function insertNewReview(review, mysqlPool) {
   return new Promise((resolve, reject) => {
     review = validation.extractValidFields(review, reviewSchema);
-    review.ID = null; //// yooo
+    review.reviewID = null;
     mysqlPool.query(
       'INSERT INTO UserReview SET ?',
       review,
@@ -99,7 +99,7 @@ router.post('/',requireAuthentication,  function (req, res, next) {
             });
           } else {
             res.status(500).json({
-              error: "Error inserting review into DB.  Please try again later."
+              error: err
             });
           }
         });

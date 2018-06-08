@@ -22,7 +22,7 @@ const criticReviewSchema = {
 function insertNewCriticReview(review, mysqlPool) {
   return new Promise((resolve, reject) => {
     review = validation.extractValidFields(review, criticReviewSchema);
-    review.ID = null;
+    review.reviewID = null;
     mysqlPool.query(
       'INSERT INTO CriticReview SET ?',
       review,
