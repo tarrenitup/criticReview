@@ -1,9 +1,7 @@
 const router = require('express').Router();
 const validation = require('../lib/validation');
 
-
 const criticReviewSchema = {
-    reviewID: { required: true },
     url: { required: true },
     gameID: { required: true },
     websiteName: { required: true },
@@ -73,7 +71,7 @@ router.post('/', function (req, res, next) {
  */
 function getCriticReviewByID(reviewID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('SELECT * FROM CriticReview WHERE id = ?', [ reviewID ], function (err, results) {
+    mysqlPool.query('SELECT * FROM CriticReview WHERE reviewID = ?', [ reviewID ], function (err, results) {
       if (err) {
         reject(err);
       } else {
@@ -112,7 +110,7 @@ router.get('/:reviewID', function (req, res, next) {
 function replaceCriticReviewByID(reviewID, review, mysqlPool) {
   return new Promise((resolve, reject) => {
     review = validation.extractValidFields(review, criticReviewSchema);
-    mysqlPool.query('UPDATE CriticReview SET ? WHERE id = ?', [ review, reviewID ], function (err, result) {
+    mysqlPool.query('UPDATE CriticReview SET ? WHERE reviewID = ?', [ review, reviewID ], function (err, result) {
       if (err) {
         reject(err);
       } else {
@@ -138,7 +136,7 @@ router.put('/:reviewID', function (req, res, next) {
     getCriticReviewByID(reviewID, mysqlPool)
       .then((existingReview) => {
         if (existingReview) {
-          if (updatedReview.gameID === existingReview.gameID) {
+          if (updatedReview.gameID == existingReview.gameID) {
             return replaceCriticReviewByID(reviewID, updatedReview, mysqlPool);
           } else {
             return Promise.reject(403);
@@ -184,7 +182,7 @@ router.put('/:reviewID', function (req, res, next) {
  */
 function deleteReviewByID(reviewID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('DELETE FROM CriticReview WHERE id = ?', [ reviewID ], function (err, result) {
+    mysqlPool.query('DELETE FROM CriticReview WHERE reviewID = ?', [ reviewID ], function (err, result) {
       if (err) {
         reject(err);
       } else {
