@@ -221,7 +221,7 @@ router.delete('/:reviewID', function (req, res, next) {
  * specified game does not have any critic reviews.  This function does not verify
  * that the specified game ID corresponds to a valid game.
  */
-function getReviewsByGameID(gameID, mysqlPool) {
+function getCriticReviewsByGameID(gameID, mysqlPool) {
   return new Promise((resolve, reject) => {
     mysqlPool.query(
       'SELECT * FROM CriticReview WHERE gameID = ?',
@@ -261,5 +261,5 @@ function getReviewsByCritic(authorName, mysqlPool) {
 }
 
 exports.router = router;
-exports.getReviewsByGameID = getReviewsByGameID;
+exports.getCriticReviewsByGameID = getCriticReviewsByGameID;
 exports.getReviewsByCritic = getReviewsByCritic;
