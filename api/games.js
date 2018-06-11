@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const validation = require('../lib/validation');
-//const { getReviewsByGameID } = require('./UserReview');
+const { getReviewsByGameID } = require('./UserReview');
+const { getCriticReviewsByGameID } = require('./criticReview');
 
 /*
  * Schema describing required/optional fields of a game object.
@@ -169,28 +170,28 @@ function getGameByID(gameID, mysqlPool) {
         resolve(results[0]);
       }
     });
-  });/*).then((business) => {
-    if (business) {
-      returnBusiness = business;
-      return getReviewsByBusinessID(businessID, mysqlPool);
+  }).then((game) => {
+    if (game) {
+      returnGame = game;
+      return getReviewsByGameID(gameID, mysqlPool);
     } else {
       return Promise.resolve(null);
     }
   }).then((reviews) => {
     if (reviews) {
-      returnBusiness.reviews = reviews;
-      return getPhotosByBusinessID(businessID, mysqlPool);
+      returnGame.reviews = reviews;
+      return getCriticReviewsByGameID(gameID, mysqlPool);
     } else {
       return Promise.resolve(null);
     }
-  }).then((photos) => {
-    if (photos) {
-      returnBusiness.photos = photos;
-      return Promise.resolve(returnBusiness);
+  }).then((creviews) => {
+    if (creviews) {
+      returnGame.criticreviews = creviews;
+      return Promise.resolve(returnGame);
     } else {
       return Promise.resolve(null);
     }
-  })*/
+  })
 }
 
 /*

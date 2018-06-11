@@ -34,10 +34,7 @@ router.post('/', function (req, res) {
     insertNewUser(req.body, mongoDB)
       .then((id) => {
         res.status(201).json({
-          _id: id,
-          links: {
-            user: `/users/${req.body.username}`
-          }
+          _id: id
         });
       })
       .catch((err) => {

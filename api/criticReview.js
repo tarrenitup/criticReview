@@ -3,7 +3,6 @@ const validation = require('../lib/validation');
 
 
 const criticReviewSchema = {
-    reviewID: { required: true },
     url: { required: true },
     gameID: { required: true },
     websiteName: { required: true },
@@ -73,7 +72,7 @@ router.post('/', function (req, res, next) {
  */
 function getCriticReviewByID(reviewID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('SELECT * FROM CriticReview WHERE id = ?', [ reviewID ], function (err, results) {
+    mysqlPool.query('SELECT * FROM CriticReview WHERE reviewID = ?', [ reviewID ], function (err, results) {
       if (err) {
         reject(err);
       } else {
@@ -112,7 +111,7 @@ router.get('/:reviewID', function (req, res, next) {
 function replaceCriticReviewByID(reviewID, review, mysqlPool) {
   return new Promise((resolve, reject) => {
     review = validation.extractValidFields(review, criticReviewSchema);
-    mysqlPool.query('UPDATE CriticReview SET ? WHERE id = ?', [ review, reviewID ], function (err, result) {
+    mysqlPool.query('UPDATE CriticReview SET ? WHERE reviewID = ?', [ review, reviewID ], function (err, result) {
       if (err) {
         reject(err);
       } else {
@@ -184,7 +183,7 @@ router.put('/:reviewID', function (req, res, next) {
  */
 function deleteReviewByID(reviewID, mysqlPool) {
   return new Promise((resolve, reject) => {
-    mysqlPool.query('DELETE FROM CriticReview WHERE id = ?', [ reviewID ], function (err, result) {
+    mysqlPool.query('DELETE FROM CriticReview WHERE reviewID = ?', [ reviewID ], function (err, result) {
       if (err) {
         reject(err);
       } else {
@@ -223,7 +222,7 @@ router.delete('/:reviewID', function (req, res, next) {
  * specified game does not have any critic reviews.  This function does not verify
  * that the specified game ID corresponds to a valid game.
  */
-function getReviewsByGameID(gameID, mysqlPool) {
+function getCriticReviewsByGameID(gameID, mysqlPool) {
   return new Promise((resolve, reject) => {
     mysqlPool.query(
       'SELECT * FROM CriticReview WHERE gameID = ?',
@@ -263,5 +262,5 @@ function getReviewsByCritic(authorName, mysqlPool) {
 }
 
 exports.router = router;
-exports.getReviewsByGameID = getReviewsByGameID;
+exports.getCriticReviewsByGameID = getCriticReviewsByGameID;
 exports.getReviewsByCritic = getReviewsByCritic;
